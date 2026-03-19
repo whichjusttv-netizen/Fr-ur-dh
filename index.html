@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🔥 Free Fire AI Pro</title>
+  <style>
+    body { background:#0d0d0d; color:#fff; font-family:sans-serif; text-align:center; }
+    #chat { max-width:600px; margin:auto; }
+    input { width:65%; padding:10px; }
+    button { padding:10px; }
+    select { padding:10px; }
+  </style>
+</head>
+<body>
+
+<h1>🔥 Free Fire AI</h1>
+
+<!-- SETTINGS -->
+<div>
+  <input id="apiKey" placeholder="Enter API Key">
+  <select id="model">
+    <option value="mistral/mistral-7b-instruct">Mistral</option>
+    <option value="openai/gpt-3.5-turbo">GPT-3.5</option>
+  </select>
+  <button onclick="saveSettings()">Save</button>
+</div>
+
+<br>
+
+<!-- CHAT -->
+<div id="chat"></div>
+
+<input id="input" placeholder="Ask anything...">
+<button onclick="send()">Send</button>
+
+<script>
+// Load saved settings
+document.getElementById("apiKey").value = localStorage.getItem("apiKey") || "";
+document.getElementById("model").value = localStorage.getItem("model") || "mistral/mistral-7b-instruct";
+
+function saveSettings() {
+  localStorage.setItem("apiKey", document.getElementById("apiKey").value);
+  localStorage.setItem("model", document.getElementById("model").value);
+  alert("Settings Saved!");
+}
+
+async function send() {
+  let input = document.getElementById("input").value;
+  let chat = document.getElementById("chat");
+
+  chat.innerHTML += "<p>🧑: " + input + "</p>";
+
+  // Free Fire filter
+  if (!input.toLowerCase().includes("free fire")) {
+    chat.innerHTML += "<p>🤖: I don’t know about that. Ask only about Free Fire.</p>";
+    return;
+  }
+
+  let apiKey = localStorage.getItem("apiKey");
+  let model = localStorage.getItem("model");
+
+  if (!apiKey) {
+    chat.innerHTML += "<p>🤖: Please enter your API key first.</p>";
+    return;
+  }
+
+  try {
+    let res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + apiKey,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          {
+            role: "system",
+            content: "You are a Free Fire expert. Only answer about Free Fire."
+          },
+          {
+            role: "user",
+            content: input
+          }
+        ]
+      })
+    });
+
+    let data = await res.json();
+
+    let reply = data.choices?.[0]?.message?.content || "Error occurred";
+
+    chat.innerHTML += "<p>🤖: " + reply + "</p>";
+
+  } catch (e) {
+    chat.innerHTML += "<p>🤖: Network error</p>";
+  }
+}
+</script>
+
+</body>
+</html>
